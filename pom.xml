@@ -38,10 +38,14 @@
         <docker.image.dockerfile.dir>${basedir}</docker.image.dockerfile.dir>
         <docker.image.dockerize.version>v0.6.1</docker.image.dockerize.version>
         <docker.plugin.version>1.2.0</docker.plugin.version>
+        <docker.version>0.36.1</docker.version>
+
+        <docker.buildArg.ARTIFACT_NAME>${project.build.finalName}</docker.buildArg.ARTIFACT_NAME>
     </properties>
 
     <dependencyManagement>
         <dependencies>
+            <!-- spring cloud -->
             <dependency>
                 <groupId>org.springframework.cloud</groupId>
                 <artifactId>spring-cloud-dependencies</artifactId>
@@ -49,11 +53,13 @@
                 <type>pom</type>
                 <scope>import</scope>
             </dependency>
+            <!-- chaos-monkey -->
             <dependency>
                 <groupId>de.codecentric</groupId>
                 <artifactId>chaos-monkey-spring-boot</artifactId>
                 <version>${chaos-monkey-spring-boot.version}</version>
             </dependency>
+            <!-- 流式断言器 -->
             <dependency>
                 <groupId>org.assertj</groupId>
                 <artifactId>assertj-core</artifactId>
@@ -102,6 +108,15 @@
                         </executions>
                     </plugin>
 
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <version>2.22.2</version>
+                        <configuration>
+                            <skipTests>true</skipTests>
+                        </configuration>
+                    </plugin>
+
                     <!-- Spring Boot Actuator displays build-related information if a META-INF/build-info.properties file is present -->
                     <plugin>
                         <groupId>pl.project13.maven</groupId>
@@ -132,9 +147,9 @@
                 <pluginManagement>
                     <plugins>
                         <plugin>
-                            <groupId>com.spotify</groupId>
+                            <groupId>io.fabric8</groupId>
                             <artifactId>docker-maven-plugin</artifactId>
-                            <version>${docker.plugin.version}</version>
+                            <version>0.36.1</version>
                             <executions>
                                 <execution>
                                     <phase>install</phase>
@@ -144,29 +159,64 @@
                                 </execution>
                             </executions>
                             <configuration>
-                                <!-- 镜像名称 -->
-                                <imageName>${docker.image.prefix}/${project.artifactId}</imageName>
-                                <!-- dockerfile路径 -->
-                                <dockerDirectory>${docker.image.dockerfile.dir}</dockerDirectory>
-                                <!-- docker hub -->
-                                <serverId>docker-hub</serverId>
-                                <!-- 仓库地址 -->
-                                <registryUrl>https://index.docker.io/v1/</registryUrl>
-                                <resources>
-                                    <resource>
-                                        <targetPath>/</targetPath>
-                                        <directory>${project.build.directory}</directory>
-                                        <include>${project.build.finalName}.jar</include>
-                                    </resource>
-                                </resources>
-                                <buildArgs>
-                                    <ARTIFACT_NAME>${project.build.finalName}</ARTIFACT_NAME>
-                                    <EXPOSED_PORT>${docker.image.exposed.port}</EXPOSED_PORT>
-                                    <DOCKERIZE_VERSION>${docker.image.dockerize.version}</DOCKERIZE_VERSION>
-                                </buildArgs>
+                                <dockerHost>npipe:////./pipe/docker_engine</dockerHost>
+                                <useColor>true</useColor>
+                                <images>
+                                    <image>
+                                        <name>${docker.image.prefix}/${project.artifactId}</name>
+                                       <assembly>
+                                           <descriptorRef>artifact</descriptorRef>
+                                       </assembly>
+                                        <build>
+                                            <contextDir>${docker.image.dockerfile.dir}</contextDir>
+                                            <tags>
+                                                <tag>latest</tag>
+                                            </tags>
+                                        </build>
+                                    </image>
+                                </images>
                             </configuration>
                         </plugin>
                     </plugins>
+
+
+                    <!--<plugins>-->
+                    <!--    <plugin>-->
+                    <!--        <groupId>com.spotify</groupId>-->
+                    <!--        <artifactId>docker-maven-plugin</artifactId>-->
+                    <!--        <version>${docker.plugin.version}</version>-->
+                    <!--        <executions>-->
+                    <!--            <execution>-->
+                    <!--                <phase>install</phase>-->
+                    <!--                <goals>-->
+                    <!--                    <goal>build</goal>-->
+                    <!--                </goals>-->
+                    <!--            </execution>-->
+                    <!--        </executions>-->
+                    <!--        <configuration>-->
+                    <!--            &lt;!&ndash; 镜像名称 &ndash;&gt;-->
+                    <!--            <imageName>${docker.image.prefix}/${project.artifactId}</imageName>-->
+                    <!--            &lt;!&ndash; dockerfile路径 &ndash;&gt;-->
+                    <!--            <dockerDirectory>${docker.image.dockerfile.dir}</dockerDirectory>-->
+                    <!--            &lt;!&ndash; docker hub &ndash;&gt;-->
+                    <!--            <serverId>docker-hub</serverId>-->
+                    <!--            &lt;!&ndash; 仓库地址 &ndash;&gt;-->
+                    <!--            <registryUrl>https://index.docker.io/v1/</registryUrl>-->
+                    <!--            <resources>-->
+                    <!--                <resource>-->
+                    <!--                    <targetPath>/</targetPath>-->
+                    <!--                    <directory>${project.build.directory}</directory>-->
+                    <!--                    <include>${project.build.finalName}.jar</include>-->
+                    <!--                </resource>-->
+                    <!--            </resources>-->
+                    <!--            <buildArgs>-->
+                    <!--                <ARTIFACT_NAME>${project.build.finalName}</ARTIFACT_NAME>-->
+                    <!--                <EXPOSED_PORT>${docker.image.exposed.port}</EXPOSED_PORT>-->
+                    <!--                <DOCKERIZE_VERSION>${docker.image.dockerize.version}</DOCKERIZE_VERSION>-->
+                    <!--            </buildArgs>-->
+                    <!--        </configuration>-->
+                    <!--    </plugin>-->
+                    <!--</plugins>-->
                 </pluginManagement>
             </build>
         </profile>
