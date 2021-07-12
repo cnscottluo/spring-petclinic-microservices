@@ -163,8 +163,8 @@
                             </executions>
                             <configuration>
                                 <!-- **global config** -->
-                                <!--<dockerHost>npipe:////./pipe/docker_engine</dockerHost>-->
-                                <dockerHost>tcp://127.0.0.1:2375</dockerHost>
+                                <dockerHost>npipe:////./pipe/docker_engine</dockerHost>
+                                <!--<dockerHost>tcp://127.0.0.1:2375</dockerHost>-->
                                 <useColor>true</useColor>
 
                                 <!-- **image config** -->
