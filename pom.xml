@@ -36,11 +36,12 @@
         <docker.image.prefix>springcommunity</docker.image.prefix>
         <docker.image.exposed.port>9090</docker.image.exposed.port>
         <docker.image.dockerfile.dir>${basedir}</docker.image.dockerfile.dir>
-        <docker.image.dockerize.version>v0.6.1</docker.image.dockerize.version>
-        <docker.plugin.version>1.2.0</docker.plugin.version>
+        <!--<docker.image.dockerize.version>v0.6.1</docker.image.dockerize.version>-->
+        <!--<docker.plugin.version>1.2.0</docker.plugin.version>-->
         <docker.version>0.36.1</docker.version>
 
         <docker.buildArg.ARTIFACT_NAME>${project.build.finalName}</docker.buildArg.ARTIFACT_NAME>
+        <docker.tag>1.0.0</docker.tag>
     </properties>
 
     <dependencyManagement>
@@ -132,7 +133,8 @@
                             <verbose>true</verbose>
                             <dateFormat>yyyy-MM-dd'T'HH:mm:ssZ</dateFormat>
                             <generateGitPropertiesFile>true</generateGitPropertiesFile>
-                            <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties</generateGitPropertiesFilename>
+                            <generateGitPropertiesFilename>${project.build.outputDirectory}/git.properties
+                            </generateGitPropertiesFilename>
                             <failOnNoGitDirectory>false</failOnNoGitDirectory>
                             <failOnUnableToExtractRepoInfo>false</failOnUnableToExtractRepoInfo>
                         </configuration>
@@ -150,6 +152,7 @@
                             <groupId>io.fabric8</groupId>
                             <artifactId>docker-maven-plugin</artifactId>
                             <version>0.36.1</version>
+                            <extensions>true</extensions>
                             <executions>
                                 <execution>
                                     <phase>install</phase>
@@ -159,18 +162,25 @@
                                 </execution>
                             </executions>
                             <configuration>
-                                <dockerHost>npipe:////./pipe/docker_engine</dockerHost>
+                                <!-- **global config** -->
+                                <!--<dockerHost>npipe:////./pipe/docker_engine</dockerHost>-->
+                                <dockerHost>tcp://127.0.0.1:2375</dockerHost>
                                 <useColor>true</useColor>
+
+                                <!-- **image config** -->
                                 <images>
                                     <image>
                                         <name>${docker.image.prefix}/${project.artifactId}</name>
-                                       <assembly>
-                                           <descriptorRef>artifact</descriptorRef>
-                                       </assembly>
                                         <build>
                                             <contextDir>${docker.image.dockerfile.dir}</contextDir>
+                                            <assembly>
+                                                <name>/</name>
+                                                <!-- artifact是预定义的值，表示将项目打包后的jar拷贝到编译上下文中，便于Dockerfile ADD指令 -->
+                                                <descriptorRef>artifact</descriptorRef>
+                                            </assembly>
                                             <tags>
                                                 <tag>latest</tag>
+                                                <tag>${docker.tag}</tag>
                                             </tags>
                                         </build>
                                     </image>
